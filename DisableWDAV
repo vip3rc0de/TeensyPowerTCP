@@ -1,4 +1,7 @@
-
+ /* * * * * * * * * * * * * * * * * * *
+ * Disable Windows Defender Antivirus *
+ * * * * * * * * * * * * * * * * * * */ 
+ 
 const unsigned int ledPin = 13;
 
 
