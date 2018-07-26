@@ -1,0 +1,21 @@
+const unsigned int ledPin = 13;                  // Teensy has the built-in LED on pin 13.
+
+void setup()
+{
+    pinMode(ledPin, OUTPUT);
+    digitalWrite(ledPin, HIGH);
+    delay(500);
+    digitalWrite(ledPin, LOW);
+    Serial.begin(9600); 
+     activeLEDs() ;                                                  
+}
+
+void loop()                                     // This loop return activeLEDs Value
+{
+  Serial.println(activeLEDs());
+}
+
+unsigned int activeLEDs()                       // Keyboard LED status.
+{
+    return int(keyboard_leds);
+}
